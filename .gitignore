@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+data/*.db
+data/reports/
+data/runs/
+targets/example-target/build/
+node_modules/
+dist/
