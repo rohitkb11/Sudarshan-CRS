@@ -8,6 +8,7 @@ class ScanRequest(BaseModel):
 
 
 class CommandEvidence(BaseModel):
+    phase: str
     command: list[str]
     exit_code: int
     stdout: str = ""
@@ -19,7 +20,7 @@ class VerificationResult(BaseModel):
     pov_replay: bool
     regression_suite: bool
     differential_refuzz: bool
-    evidence: list[CommandEvidence] = []
+    evidence: list[CommandEvidence] = Field(default_factory=list)
 
 
 class PipelineResult(BaseModel):
@@ -27,6 +28,10 @@ class PipelineResult(BaseModel):
     target: str
     vulnerability: str | None = None
     crash_signature: str | None = None
+    pov_path: str | None = None
+    pov_sha256: str | None = None
+    pov_base64: str | None = None
+    confirmation: CommandEvidence | None = None
     patch_applied: bool = False
     attempts: int = 0
     verification: VerificationResult | None = None
