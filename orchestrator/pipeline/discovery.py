@@ -1,23 +1,102 @@
 from dataclasses import dataclass
 from pathlib import Path
+import shutil
+
+from orchestrator.config import settings
+from .build_harness import fuzzer_path
 from .utils import RunResult, run
 
 
 @dataclass
 class Candidate:
-    input_text: str
+    input_path: Path
+    input_bytes: bytes
     result: RunResult
 
 
-def discover(target_dir: Path, max_cases: int) -> list[Candidate]:
-    """Seeded mutation loop for the MVP. Replace with libFuzzer once harnesses land."""
-    binary = target_dir / "build" / "parser"
-    seeds = ["A" * length for length in range(8, 8 + max_cases * 8, 8)]
-    return [Candidate(seed, run([str(binary), seed], target_dir)) for seed in seeds]
+ARTIFACT_PREFIXES = ("crash-", "leak-", "oom-", "slow-unit-", "timeout-")
+SANITIZER_MARKERS = (
+    "AddressSanitizer",
+    "UndefinedBehaviorSanitizer",
+    "MemorySanitizer",
+    "runtime error:",
+)
+
+
+def reset_directory(path: Path) -> None:
+    if path.exists():
+        shutil.rmtree(path)
+    path.mkdir(parents=True)
+
+
+def seed_corpus(path: Path, seeds: list[bytes] | None = None) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    initial_seeds = seeds or [b"hello", b"!", b"A" * 8, b"A" * 15]
+    for index, seed in enumerate(initial_seeds):
+        (path / f"seed-{index:02d}").write_bytes(seed)
+
+
+def run_fuzzer(
+    target_dir: Path,
+    corpus_dir: Path,
+    artifact_dir: Path,
+    *,
+    runs: int,
+    max_time_seconds: int,
+    max_input_bytes: int,
+) -> RunResult:
+    artifact_prefix = artifact_dir.resolve().as_posix() + "/"
+    command = [
+        str(fuzzer_path(target_dir)),
+        str(corpus_dir),
+        f"-artifact_prefix={artifact_prefix}",
+        f"-max_total_time={max_time_seconds}",
+        f"-runs={runs}",
+        f"-max_len={max_input_bytes}",
+        "-print_final_stats=1",
+    ]
+    timeout = max(settings.command_timeout_seconds, max_time_seconds + 5)
+    return run(command, target_dir, timeout)
+
+
+def artifact_candidates(artifact_dir: Path, result: RunResult) -> list[Candidate]:
+    if not artifact_dir.exists():
+        return []
+    artifacts = sorted(
+        path
+        for path in artifact_dir.iterdir()
+        if path.is_file() and path.name.startswith(ARTIFACT_PREFIXES)
+    )
+    return [Candidate(path, path.read_bytes(), result) for path in artifacts]
+
+
+def discover(
+    target_dir: Path,
+    max_time_seconds: int,
+    max_runs: int,
+    max_input_bytes: int,
+) -> list[Candidate]:
+    """Run a bounded libFuzzer campaign and return its concrete crash artifacts."""
+    discovery_dir = target_dir / ".crs" / "discovery"
+    corpus_dir = discovery_dir / "corpus"
+    artifact_dir = discovery_dir / "artifacts"
+    reset_directory(discovery_dir)
+    corpus_dir.mkdir()
+    artifact_dir.mkdir()
+    seed_corpus(corpus_dir)
+    result = run_fuzzer(
+        target_dir,
+        corpus_dir,
+        artifact_dir,
+        runs=max_runs,
+        max_time_seconds=max_time_seconds,
+        max_input_bytes=max_input_bytes,
+    )
+    return artifact_candidates(artifact_dir, result)
 
 
 def sanitizer_signature(stderr: str) -> str | None:
     for line in stderr.splitlines():
-        if "AddressSanitizer" in line or "UndefinedBehaviorSanitizer" in line:
+        if any(marker in line for marker in SANITIZER_MARKERS):
             return line.strip()
     return None

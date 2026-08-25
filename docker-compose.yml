@@ -1,0 +1,25 @@
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./targets:/workspace/targets:ro
+      - ./data:/workspace/data
+    environment:
+      CLANG_BIN: ${CLANG_BIN:-clang}
+      MAKE_BIN: ${MAKE_BIN:-make}
+      FUZZ_TIME_SECONDS: ${FUZZ_TIME_SECONDS:-10}
+      FUZZ_RUNS: ${FUZZ_RUNS:-100000}
+      FUZZ_MAX_INPUT_BYTES: ${FUZZ_MAX_INPUT_BYTES:-256}
+      DIFFERENTIAL_FUZZ_RUNS: ${DIFFERENTIAL_FUZZ_RUNS:-2000}
+      COMMAND_TIMEOUT_SECONDS: ${COMMAND_TIMEOUT_SECONDS:-30}
+      PYTHONDONTWRITEBYTECODE: "1"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp

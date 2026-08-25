@@ -1,8 +1,10 @@
+import base64
+import hashlib
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from orchestrator.config import ROOT, settings
-from orchestrator.models.schemas import PipelineResult, ScanRequest
-from orchestrator.pipeline.build_harness import build
+from orchestrator.models.schemas import CommandEvidence, PipelineResult, ScanRequest
+from orchestrator.pipeline.build_harness import build, build_fuzzer
 from orchestrator.pipeline.confirm_pov import confirm
 from orchestrator.pipeline.context_map import build_context_map
 from orchestrator.pipeline.discovery import discover
@@ -27,12 +29,30 @@ def scan(request: ScanRequest) -> PipelineResult:
     if not source_target.is_dir():
         raise HTTPException(404, f"Unknown target: {request.target}")
     target_dir = create_workspace(source_target, settings.data_dir / "runs")
-    initial_build = build(target_dir, sanitized=True)
-    if initial_build.exit_code != 0:
-        return PipelineResult(status="error", target=request.target, message="Sanitized build failed: " + initial_build.stderr[-500:])
+    normal_build = build(target_dir, sanitized=False, clean_first=True)
+    sanitized_build = build(target_dir, sanitized=True, clean_first=False)
+    fuzzer_build = build_fuzzer(target_dir, clean_first=False)
+    for label, build_result in (
+        ("Normal", normal_build),
+        ("Sanitized", sanitized_build),
+        ("Fuzzer", fuzzer_build),
+    ):
+        if build_result.exit_code != 0:
+            return PipelineResult(
+                status="error",
+                target=request.target,
+                workspace_path=str(target_dir.relative_to(ROOT)),
+                message=f"{label} build failed: {build_result.stderr[-1000:]}",
+            )
     build_context_map(target_dir)
-    for candidate in discover(target_dir, settings.fuzz_cases):
-        confirmed, _, signature = confirm(target_dir, candidate)
+    candidates = discover(
+        target_dir,
+        settings.fuzz_time_seconds,
+        settings.fuzz_runs,
+        settings.fuzz_max_input_bytes,
+    )
+    for candidate in candidates:
+        confirmed, replay, signature = confirm(target_dir, candidate)
         if not confirmed:
             continue
         patch_source = target_dir / "src" / "parser.c"
@@ -42,10 +62,22 @@ def scan(request: ScanRequest) -> PipelineResult:
             return PipelineResult(status="unverified", target=request.target, crash_signature=signature, message=outcome.message)
         after_patch = patch_source.read_text(encoding="utf-8")
         patch_file = write_patch(before_patch, after_patch, "src/parser.c", settings.data_dir / "reports" / f"{target_dir.name}.patch")
-        verification = verify(target_dir, candidate.input_text)
+        verification = verify(target_dir, candidate.input_path)
         passed = all([verification.clean_rebuild, verification.pov_replay, verification.regression_suite, verification.differential_refuzz])
+        pov_bytes = candidate.input_bytes
         result = PipelineResult(status="verified" if passed else "unverified", target=request.target, vulnerability=outcome.bug_class,
-                                crash_signature=signature, patch_applied=True, attempts=1, verification=verification,
+                                crash_signature=signature,
+                                pov_path=str(candidate.input_path.relative_to(ROOT)),
+                                pov_sha256=hashlib.sha256(pov_bytes).hexdigest(),
+                                pov_base64=base64.b64encode(pov_bytes).decode("ascii"),
+                                confirmation=CommandEvidence(
+                                    phase="Pre-patch sanitizer replay",
+                                    command=replay.command,
+                                    exit_code=replay.exit_code,
+                                    stdout=replay.stdout,
+                                    stderr=replay.stderr,
+                                ),
+                                patch_applied=True, attempts=1, verification=verification,
                                 patch_path=str(patch_file.relative_to(ROOT)) if patch_file else None,
                                 workspace_path=str(target_dir.relative_to(ROOT)), message=outcome.message)
         if passed:
