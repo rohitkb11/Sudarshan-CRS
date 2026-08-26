@@ -63,9 +63,12 @@ def artifact_candidates(artifact_dir: Path, result: RunResult) -> list[Candidate
     if not artifact_dir.exists():
         return []
     artifacts = sorted(
-        path
-        for path in artifact_dir.iterdir()
-        if path.is_file() and path.name.startswith(ARTIFACT_PREFIXES)
+        (
+            path
+            for path in artifact_dir.iterdir()
+            if path.is_file() and path.name.startswith(ARTIFACT_PREFIXES)
+        ),
+        key=lambda p: (p.stat().st_size, p.name),
     )
     return [Candidate(path, path.read_bytes(), result) for path in artifacts]
 
@@ -75,6 +78,7 @@ def discover(
     max_time_seconds: int,
     max_runs: int,
     max_input_bytes: int,
+    initial_seeds: list[bytes] | None = None,
 ) -> list[Candidate]:
     """Run a bounded libFuzzer campaign and return its concrete crash artifacts."""
     discovery_dir = target_dir / ".crs" / "discovery"
@@ -83,7 +87,7 @@ def discover(
     reset_directory(discovery_dir)
     corpus_dir.mkdir()
     artifact_dir.mkdir()
-    seed_corpus(corpus_dir)
+    seed_corpus(corpus_dir, initial_seeds)
     result = run_fuzzer(
         target_dir,
         corpus_dir,
@@ -100,3 +104,27 @@ def sanitizer_signature(stderr: str) -> str | None:
         if any(marker in line for marker in SANITIZER_MARKERS):
             return line.strip()
     return None
+
+
+def deduplicate_candidates(candidates: list[Candidate], target_dir: Path) -> list[Candidate]:
+    """Deduplicate candidates by crash signature so the same bug isn't patched repeatedly."""
+    seen_signatures: set[str] = set()
+    unique: list[Candidate] = []
+
+    for candidate in sorted(candidates, key=lambda c: len(c.input_bytes)):
+        # Check signature from initial fuzzer stderr or replay
+        sig = sanitizer_signature(candidate.result.stderr)
+        if not sig:
+            replay = run(
+                [str(fuzzer_path(target_dir)), str(candidate.input_path), "-runs=1"],
+                target_dir,
+                settings.command_timeout_seconds,
+            )
+            sig = sanitizer_signature(replay.stderr)
+
+        sig_key = sig or f"crash-len-{len(candidate.input_bytes)}"
+        if sig_key not in seen_signatures:
+            seen_signatures.add(sig_key)
+            unique.append(candidate)
+
+    return unique

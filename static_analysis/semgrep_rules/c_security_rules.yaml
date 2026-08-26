@@ -1,0 +1,45 @@
+rules:
+  - id: cwe-120-unbounded-strcpy
+    patterns:
+      - pattern: strcpy($DEST, $SRC)
+    message: "Insecure use of strcpy without size bounds checking (CWE-120). Potential stack or heap buffer overflow."
+    languages: [c, cpp]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')"
+
+  - id: cwe-120-unbounded-sprintf
+    patterns:
+      - pattern: sprintf($DEST, $FMT, ...)
+    message: "Insecure use of sprintf into destination buffer without size bound (CWE-120). Use snprintf instead."
+    languages: [c, cpp]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-120: Buffer Copy without Checking Size of Input"
+
+  - id: cwe-676-unsafe-gets
+    patterns:
+      - pattern: gets($BUFFER)
+    message: "Inherently unsafe function gets() has no buffer bound checks (CWE-676). Use fgets() instead."
+    languages: [c, cpp]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-676: Use of Potentially Dangerous Function"
+
+  - id: cwe-120-unbounded-strcat
+    patterns:
+      - pattern: strcat($DEST, $SRC)
+    message: "Insecure use of strcat without destination capacity validation (CWE-120). Use strncat instead."
+    languages: [c, cpp]
+    severity: WARNING
+    metadata:
+      cwe: "CWE-120: Buffer Copy without Checking Size of Input"
+
+  - id: cwe-134-format-string
+    patterns:
+      - pattern: printf($INPUT)
+    message: "Direct formatting of variable input without format string specifier (CWE-134)."
+    languages: [c, cpp]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-134: Use of Externally-Controlled Format String"

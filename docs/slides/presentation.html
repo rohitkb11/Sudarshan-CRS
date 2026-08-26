@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Kavach — 5-Slide Competition Pitch Deck</title>
+  <style>
+    :root {
+      --bg: #070d18;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --primary: #38bdf8;
+      --accent: #f97316;
+      --success: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .slide {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .slide-badge {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: #1e293b;
+      color: var(--primary);
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid #334155;
+    }
+    h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
+    h2 { color: var(--accent); font-size: 1.4rem; margin-bottom: 1.2rem; }
+    h3 { color: var(--text); font-size: 1.1rem; margin: 1rem 0 0.5rem; }
+    p, li { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+    ul { padding-left: 1.2rem; }
+    li { margin-bottom: 0.5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 1.2rem;
+      border-radius: 8px;
+    }
+    .card strong { color: #ffffff; display: block; margin-bottom: 0.3rem; }
+    pre {
+      background: #020617;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Slide 1 -->
+    <div class="slide">
+      <div class="slide-badge">SLIDE 1 / 5</div>
+      <h1>AI KAVACH (Sudarshan-CRS)</h1>
+      <h2>1. Introduction, Ideation & Brief Description</h2>
+      <p style="font-size: 1.1rem; color: #e2e8f0; margin-bottom: 1.5rem; font-style: italic;">
+        "Find the bug. Prove it's real. Fix it. Prove the fix holds. All without a human in the loop."
+      </p>
+      <div class="grid">
+        <div class="card">
+          <strong>The Strategic Problem</strong>
+          <p>Defence & national security software systems have millions of lines of code with zero-day exposure. Manual triage and verification cannot scale to modern cyber operational tempo.</p>
+        </div>
+        <div class="card">
+          <strong>The Solution</strong>
+          <p>An autonomous Cyber-Reasoning System built on DARPA AIxCC top architecture (Buttercup), replacing unconstrained LLM wrappers with deterministic tools and ultra-fast targeted reasoning.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide">
+      <div class="slide-badge">SLIDE 2 / 5</div>
+      <h2>2. Detailed Methodology: The 7-Stage Pipeline</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>Stage 1: Intake & Build Harness</strong>
+          <p>Disposable container builds Normal, ASan+UBSan, and libFuzzer binaries.</p>
+        </div>
+        <div class="card">
+          <strong>Stage 2: Discovery Engine</strong>
+          <p>Semgrep static analysis generates smart seeds for bounded libFuzzer campaigns.</p>
+        </div>
+        <div class="card">
+          <strong>Stage 3: AST Context Map</strong>
+          <p>Tree/regex indexing extracts only the buggy function slice, saving 90%+ tokens.</p>
+        </div>
+        <div class="card">
+          <strong>Stage 4: PoV Confirmation</strong>
+          <p>Deterministic replay under sanitizers establishes indisputable proof.</p>
+        </div>
+        <div class="card">
+          <strong>Stage 5: Tiered Patch Gen</strong>
+          <p>Rule Registry (Instant) &rarr; Patch Memory (CBR) &rarr; Groq Qwen/Llama Fallback.</p>
+        </div>
+        <div class="card">
+          <strong>Stage 6: Verification (V1–V4)</strong>
+          <p>Rebuild &rarr; Replay &rarr; Regression &rarr; Differential Re-fuzz with 3-attempt feedback.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide">
+      <div class="slide-badge">SLIDE 3 / 5</div>
+      <h2>3. Technology Stack & Architecture Flow</h2>
+      <pre>
+Target Codebase &rarr; Build Harness (ASan / UBSan / Fuzzer)
+                      &darr;
+Discovery (Semgrep + libFuzzer) &larr;&rarr; AST Context Map (Function Slices)
+                      &darr;
+            Confirmed PoV Replay
+                      &darr;
+Tiered Patch Gen (Rules &rarr; Patch Memory &rarr; Groq Qwen 27B / Llama 3.3)
+                      &darr;
+Verification Suite (V1 Rebuild, V2 PoV, V3 Regression, V4 Diff Re-Fuzz)
+                      &darr; (Pass)
+            Evidence Report &amp; Commander UI
+      </pre>
+      <div class="grid" style="margin-top: 1rem;">
+        <div class="card">
+          <strong>Core Stack</strong>
+          <p>Python 3.12, FastAPI, LLVM Clang, AddressSanitizer, UndefinedBehaviorSanitizer, libFuzzer, Semgrep.</p>
+        </div>
+        <div class="card">
+          <strong>AI &amp; UI</strong>
+          <p>Groq LPU (qwen/qwen3.6-27b, llama-3.3-70b), Anthropic Claude, React 18, Vite, Docker Compose.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4 -->
+    <div class="slide">
+      <div class="slide-badge">SLIDE 4 / 5</div>
+      <h2>4. Salient Features &amp; Novelty / USP</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>1. §8 Definition of Proof (V1–V4)</strong>
+          <p>Includes Differential Re-fuzzing (V4) to prevent shallow patches that merely hide crashes (~40% flaw in baseline systems).</p>
+        </div>
+        <div class="card">
+          <strong>2. Patch Memory (Case-Based Reasoning)</strong>
+          <p>Learns and caches verified remediation patterns. Grows faster and cheaper with every scanned vulnerability.</p>
+        </div>
+        <div class="card">
+          <strong>3. Dual Scan: Full vs Delta Scan</strong>
+          <p>Enables instant CI/CD Pull Request auditing by concentrating fuzzing and analysis exclusively on incoming diffs.</p>
+        </div>
+        <div class="card">
+          <strong>4. Laptop &amp; Edge Deployable</strong>
+          <p>Requires no GPU clusters; runs inside lightweight disposable containers on single-laptop hardware (8 cores, 16GB RAM).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5 -->
+    <div class="slide">
+      <div class="slide-badge">SLIDE 5 / 5</div>
+      <h2>5. Final Deliverables</h2>
+      <ul>
+        <li><strong>Autonomous CRS Backend</strong>: Containerized REST API with full lifecycle scanning capabilities.</li>
+        <li><strong>Cryptographic PoV Artifacts</strong>: Confirmed reproducible crashing payloads with SHA-256 digests.</li>
+        <li><strong>Verified Unified Diffs (`.patch`)</strong>: Structurally validated fixes ready for immediate code deployment.</li>
+        <li><strong>Comprehensive Evidence Dossiers</strong>: Markdown &amp; JSON reports with execution traces and sanitizer outputs.</li>
+        <li><strong>Interactive Commander Console</strong>: Real-time React dashboard for visual verification.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

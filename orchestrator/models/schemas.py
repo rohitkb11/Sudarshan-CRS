@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 class ScanRequest(BaseModel):
     target: str = Field(default="example-target", pattern=r"^[a-zA-Z0-9_-]+$")
     mode: Literal["full", "delta"] = "full"
+    diff: str | None = None
+    target_files: list[str] | None = None
 
 
 class CommandEvidence(BaseModel):
@@ -26,6 +28,7 @@ class VerificationResult(BaseModel):
 class PipelineResult(BaseModel):
     status: Literal["verified", "unverified", "no_vulnerability", "error"]
     target: str
+    scan_mode: Literal["full", "delta"] = "full"
     vulnerability: str | None = None
     crash_signature: str | None = None
     pov_path: str | None = None
