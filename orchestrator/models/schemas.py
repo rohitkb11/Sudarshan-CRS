@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class ScanRequest(BaseModel):
-    target: str = Field(default="example-target", pattern=r"^[a-zA-Z0-9_-]+$")
+    target: str = Field(default="example-target", pattern=r"^[a-zA-Z0-9_./\\-]+$")
     mode: Literal["full", "delta"] = "full"
     diff: str | None = None
     target_files: list[str] | None = None

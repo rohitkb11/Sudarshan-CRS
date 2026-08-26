@@ -1,0 +1,66 @@
+{
+  "benchmark": "Kavach C++ Vulnerability Benchmark",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "01_oob_read",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.bin"
+    },
+    {
+      "id": "02_stack_buffer_overflow",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "03_heap_buffer_overflow",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "04_use_after_free",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "05_double_free",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "06_integer_overflow",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "07_null_deref",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "08_format_string",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "09_path_traversal",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    },
+    {
+      "id": "10_command_injection",
+      "source": "vulnerable.cpp",
+      "fix_spec": "expected_fix.md",
+      "pov": "poc.txt"
+    }
+  ]
+}

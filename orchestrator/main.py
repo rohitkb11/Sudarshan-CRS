@@ -68,7 +68,14 @@ def get_patch_memory():
 
 @app.post("/scans", response_model=PipelineResult)
 def scan(request: ScanRequest) -> PipelineResult:
-    source_target = ROOT / "targets" / request.target
+    target_clean = request.target.replace("\\", "/").strip("/")
+    source_target = (ROOT / "targets" / target_clean).resolve()
+    targets_root = (ROOT / "targets").resolve()
+    try:
+        source_target.relative_to(targets_root)
+    except ValueError:
+        raise HTTPException(400, "Invalid target path traversal")
+
     if not source_target.is_dir():
         raise HTTPException(404, f"Unknown target: {request.target}")
 

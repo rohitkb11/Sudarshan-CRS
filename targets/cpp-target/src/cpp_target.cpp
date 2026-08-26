@@ -8,6 +8,7 @@ void process_input(const char *input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
         buffer[i] = input[i];
     }
+    std::cout << "Processed: " << buffer << std::endl;
 }
 
 #ifndef CRS_FUZZING

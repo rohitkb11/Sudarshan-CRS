@@ -1,0 +1,1 @@
+hello; echo SHOULD_NOT_BE_RUN

@@ -20,7 +20,9 @@ def write_report(root: Path, result: PipelineResult) -> Path:
     directory = root / "data" / "reports"
     directory.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    path = directory / f"{result.target}-{result.scan_mode}-{stamp}.md"
+    target_slug = result.target.replace("/", "-").replace("\\", "-")
+    path = directory / f"{target_slug}-{result.scan_mode}-{stamp}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
     checks = result.verification
 
     body = [
